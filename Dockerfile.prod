@@ -1,0 +1,33 @@
+# ── Stage 1: Install dependencies ────────────────────────────────────────
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --omit=dev
+# npm ci is stricter than npm install — uses exact versions from package-lock.json
+# Always use npm ci in production builds
+
+# ── Stage 2: Production ───────────────────────────────────────────────────
+FROM node:20-alpine AS production
+
+# Run as non-root user for security — never run Node as root in prod
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy only prod node_modules from Stage 1
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy only source code — no Dockerfile, no .env, no tests
+COPY src/ ./src/
+COPY package.json ./
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 3000
+
+CMD ["node", "src/server.js"]
