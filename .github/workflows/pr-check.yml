@@ -4,11 +4,11 @@ name: PR checks
 
 on:
   pull_request:
-    branches: [dev, main]    # runs on PRs targeting dev OR main
+    branches: [dev, main]
 
 jobs:
   test:
-    name: Lint and test
+    name: Run tests          # ← matches branch protection rule exactly
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
         run: npm test --if-present
 
   docker-build-check:
-    name: Docker build check
+    name: Build and push Docker image   # ← matches branch protection rule exactly
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +37,6 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: false          # ← do NOT push on PR, just verify it builds
+          push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
